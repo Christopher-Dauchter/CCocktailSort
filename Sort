@@ -1,0 +1,200 @@
+    /*
+    Written as a part of Homework 2 on 10/4/2020 for Advanced Technical Progragraming taught by Larry Speakman at MSU Denver.
+
+    This program can either prompt a user for inputs of number, or randomly generate a seris of numbers. The sorts them.
+
+      "Out of clutter, find simplicity. From discord, find harmony. In the middle of difficulty lies opportunity."
+        -- Albert Einstein (1879 -- 1955)
+
+    */
+
+    #include <stdio.h>
+
+    void tablePrint(int intArray[], int arrLength, int startPoint, int maxNum);
+    int randGen(int upper, int lower, int count, int seed);
+
+    int main(void) {
+
+    char userRepeat; 
+
+    do {
+
+    int sortVis = 1; // Change this to 0 if you want to for go the graphics
+    int randFill = 1; // Changes this to 1 if you want the array to auto fill itself with random numbers
+    int randMax = 43; //Upper limit of the random number generator
+    int randMin = 1; //Lower limit of the random number generator.
+    int randSeed = 1337; //If you need consistent results this see can be used. 
+    int updateTime = 24700; //How ofthe the graphics update
+
+    int cyclesComplete = 0; //How many times the sorter has gone back and forth
+    int holdNum = 0; //Temporary variable for holding the users input
+
+    int maxInputs = 30; //Total number of numbers to be inputed and sorted
+    int startNum = 1; // How far into the array would you like to sort it. 
+    int zeroCount = 0; // How many times has the user typed 0
+
+    int madeSwap = 0; // Tracks if the sort algorithms have swapped a number in this cycle
+
+    int sortMax = 1; //Tracks if the program is doing sorting the max values
+    int sortMin = 1; //Tracks if the program is doing sorting the min values
+    int notDoneSort = 1; // A boolean like variable that tells the program when it is done sorting.
+
+    int maxNum = 0; // Holds the biggest number found
+    int minNum = 0; // holds the smallest number found
+
+    int userInput[maxInputs]; // Array to hold the numbers to be processed
+    userInput[0] = 0; //Setting the first entry as zero, to prevent any uassigned variable issues
+    int userInputUnsorted[maxInputs]; // Array for the coppy of the input
+
+    int arrSize = (sizeof userInput / sizeof *userInput); // Used to pass to the print function so that it can properly print it.
+
+
+    //If you dont want to enter nubmers this setting can be turned on to generate random numbers.
+
+    if (randFill == 1){
+      for(int s = startNum; s <= maxInputs; s++){
+        userInput[s] = randGen(randMax, randMin, maxInputs, randSeed);
+      }
+    }
+    //Prompt user for input, if they enter a zero, tell them to enter again, count the zero inputs
+    else if (randFill == 0){
+    printf("Please enter %d inputs:\n",maxInputs);
+
+    for (int m = startNum; m <= maxInputs;){
+      do{
+        printf("Enter #%d number:", m);
+        scanf(" %d",&holdNum);
+        if (holdNum == 0){
+          printf("Enter a number other than 0\n");
+          zeroCount++;
+        }
+        else if (holdNum != 0 ){
+          userInput[m] = holdNum;
+          m++;
+          holdNum = 0;
+        }
+      } while (holdNum != 0);
+    }
+    }
+    //Copy unsorted data
+    for (int n = 0; n <= maxInputs; n++){
+      userInputUnsorted[n] = userInput[n];
+    }
+
+    //Coditioning before sort procedure.
+    int padLen = maxNum/2 + maxNum%2;
+    minNum = userInput[1];
+    //Sorting the data
+    do {
+      for (int p = startNum; p <= maxInputs;){
+        if (sortVis == 1){
+        printf("%*.20s\n",padLen+6,"Going Forward");
+        printf("%d\n",p);
+        printf("Min: %d & Max: %d & Cycles: %d\n",minNum,maxNum, cyclesComplete);
+        tablePrint(userInput, arrSize , 0, maxNum);
+        usleep(updateTime);
+        system("clear");
+        }
+        //Checking the larger numbers
+        if (userInput[p] > userInput[p+1] && p < maxInputs){
+          if (userInput[p] > maxNum){
+          maxNum = userInput[p];
+          }
+          userInput[0] = userInput[p+1];
+          userInput[p+1] = userInput[p];
+          userInput[p] = userInput[0];
+          madeSwap = 1;
+        }
+        else if(madeSwap == 0) {sortMax = 0;}
+        p++;
+      }
+      for (int p = maxInputs; p >= startNum;){ 
+        if (sortVis == 1){
+        printf("%*.20s\n",padLen+6,"Going Back");
+        printf("%d\n",p);
+        printf("Min: %d & Max: %d & Cycles: %d\n",minNum,maxNum,cyclesComplete);
+        tablePrint(userInput, arrSize , 0, maxNum);
+        usleep(updateTime);
+        system("clear");
+        }
+        //checking the smaller numbers
+        if (userInput[p] < userInput[p-1] && p >= startNum){
+          if (userInput[p] < minNum){
+          minNum = userInput[p];
+          }
+          userInput[0] = userInput[p-1];
+          userInput[p-1] = userInput[p];
+          userInput[p] = userInput[0];
+          madeSwap = 1;
+        }
+        else if (madeSwap == 0){sortMin = 0;}
+        p--;
+      }
+      //Is sorting done yet?
+      if (sortMax == 0 && sortMin == 0){
+        if (maxNum == 0){
+          maxNum = minNum;
+        }
+        notDoneSort = 0;
+      }
+      else{madeSwap = 0;}
+      //counting the cycles
+      cyclesComplete++;
+    } while (notDoneSort == 1);
+      
+    //Print the entire information for the user.
+    padLen = maxNum/2 + maxNum%2;
+
+    printf("%*.20s\n",padLen+4,"Sorted");
+    tablePrint(userInput, arrSize , startNum, maxNum);
+    printf("%*.20s\n",padLen+4,"Unsorted");
+    tablePrint(userInputUnsorted, arrSize , startNum, maxNum);
+    printf("Zeros entered: %d\n",zeroCount);
+    printf("Min Number: %d\n",minNum);
+    printf("Max Number: %d\n",maxNum);
+    printf("Cycles completed: %d\n",cyclesComplete);
+    printf("Type N to quit, otherwise any other entry will repeat the program\n:");
+    scanf("%c", &userRepeat);
+    }while(userRepeat!='N');
+
+    }
+
+
+    //Cycles htrough an array with ints, and make a string of stars as long as the integer values
+    void tablePrint(int userArray[], int arrLength, int startPoint, int maxNum){
+      // Takes an array and prints stars for the value in each position
+      // Used for visualizing sorting algorythims
+      for (int k = 0; k <= maxNum+5; k++){
+        printf("-");
+      }
+
+      printf("\n");
+
+      for (int i = startPoint; i <= arrLength; i++ ){
+        int userNum = userArray[i];
+        printf("Pos#:%2d|%3d|",i,userNum);
+          for (int j = 1; j <= userNum; j++){
+            printf("*");
+          }
+        printf("\n");
+      }
+
+      for (int k = 0; k <= maxNum+5; k++){
+        printf("-");
+      }
+
+      printf("\n");
+
+    }
+    //Generates a random number
+    int randGen(int upper, int lower, int count, int seed){
+        int r; 
+        int num;
+        //srand(seed); 
+
+        for (r = 0; r < count; r++) { 
+                num = (rand() % 
+              (upper - lower + 1)) + lower; 
+        }
+      return num;
+    }
